@@ -656,7 +656,7 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
   int tributeRevealedCards[2] = {-1, -1};
   int temphand[MAX_HAND];// moved above the if statement
   int drawntreasure=0;
-  int cardDrawn;
+  //int cardDrawn;
   int z = 0;// this is the counter for the temp hand
   if (nextPlayer > (state->numPlayers - 1)){
     nextPlayer = 0;
@@ -667,6 +667,11 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
   switch( card ) 
     {
     case adventurer:
+    	//call adventurer function and pass in appropriate variables
+    	return adventurerFunction(drawntreasure, z, currentPlayer, state, temphand);	
+
+
+    /*
       while(drawntreasure<2){
 	if (state->deckCount[currentPlayer] <1){//if the deck is empty we need to shuffle discard and add to deck
 	  shuffle(currentPlayer, state);
@@ -686,7 +691,8 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
 	z=z-1;
       }
       return 0;
-			
+	*/
+
     case council_room:
       //+4 Cards
       for (i = 0; i < 4; i++)
@@ -829,6 +835,9 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
       return 0;
 		
     case smithy:
+    //make call to smithy function and pass in appropriate variables 
+      return smithyFunction(currentPlayer, state, handPos);
+   /*
       //+3 Cards
       for (i = 0; i < 3; i++)
 	{
@@ -838,8 +847,12 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
       //discard card from hand
       discardCard(handPos, currentPlayer, state, 0);
       return 0;
+  */
 		
     case village:
+    //make call to village function and pass in appropriate variables
+    return villageFunction(currentPlayer, state, handPos);
+    /*
       //+1 Card
       drawCard(currentPlayer, state);
 			
@@ -849,6 +862,7 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
       //discard played card from hand
       discardCard(handPos, currentPlayer, state, 0);
       return 0;
+      */
 		
     case baron:
       state->numBuys++;//Increase buys by 1!
@@ -902,6 +916,9 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
       return 0;
 		
     case great_hall:
+     //make call to great_hall function and pass appropriate variables. 
+    return great_hallFunction(currentPlayer, state, handPos);
+     /*
       //+1 Card
       drawCard(currentPlayer, state);
 			
@@ -911,6 +928,7 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
       //discard card from hand
       discardCard(handPos, currentPlayer, state, 0);
       return 0;
+      */
 		
     case minion:
       //+1 action
@@ -1164,6 +1182,9 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
       return 0;
 		
     case salvager:
+    //make call to salvager card function and pass appropriate variables. 
+    return salvagerFunction(currentPlayer, state, handPos, choice1);
+    /*
       //+1 buy
       state->numBuys++;
 			
@@ -1178,7 +1199,8 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
       //discard card
       discardCard(handPos, currentPlayer, state, 0);
       return 0;
-		
+	*/	
+
     case sea_hag:
       for (i = 0; i < state->numPlayers; i++){
 	if (i != currentPlayer){
@@ -1222,6 +1244,95 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
 	
   return -1;
 }
+
+//adventurer function
+int adventurerFunction(int drawntreasure, int z, int currentPlayer, struct gameState *state, int temphand[])	
+{
+      int cardDrawn;
+      while(drawntreasure<2){
+	if (state->deckCount[currentPlayer] <1){//if the deck is empty we need to shuffle discard and add to deck
+	  shuffle(currentPlayer, state);
+	}
+	drawCard(currentPlayer, state);
+	cardDrawn = state->hand[currentPlayer][state->handCount[currentPlayer]-1];//top card of hand is most recently drawn card.
+	if (cardDrawn == copper || cardDrawn == silver || cardDrawn == silver) //bug
+	  drawntreasure++;
+	else{
+	  temphand[z]=cardDrawn;
+	  state->handCount[currentPlayer]--; //this should just remove the top card (the most recently drawn one).
+	  z++;
+	}
+      }
+      while(z-1>=0){
+	state->discard[currentPlayer][state->discardCount[currentPlayer]++]=temphand[z-1]; // discard all cards in play that have been drawn
+	z=z-1;
+      }
+      return 0;
+  }
+
+  //smithy function 
+  int smithyFunction(int currentPlayer, struct gameState *state, int handPos)
+  {
+      int i;
+    //+3 Cards
+      for (i = 0; i <= 3; i++)//bug
+  {
+    drawCard(currentPlayer, state);
+  }
+      
+      //discard card from hand
+      discardCard(handPos, currentPlayer, state, 0);
+      return 0;
+  }
+
+//villiage function NO BUG
+ int villageFunction(int currentPlayer, struct gameState *state, int handPos)
+ {
+      //+1 Card
+      drawCard(currentPlayer, state);
+
+      
+      //+2 Actions
+      state->numActions = state->numActions + 2;
+      
+      
+      //discard played card from hand
+      discardCard(handPos, currentPlayer, state, 0);
+      return 0;
+  }
+
+  //great_hall function 
+  int great_hallFunction(int currentPlayer, struct gameState *state, int handPos)
+   {
+      //+1 Card
+      drawCard(currentPlayer, state);
+			
+      //+1 Actions
+      //state->numActions++; bug
+			
+      //discard card from hand
+      discardCard(handPos, currentPlayer, state, 0);
+      return 0;
+    }
+
+   //salvager function
+  int salvagerFunction(int currentPlayer, struct gameState *state, int handPos, int choice1)
+  {
+      //+1 buy
+      state->numBuys++;
+			
+      if (choice1)
+	{
+	  //gain coins equal to trashed card
+	  state->coins = state->coins + getCost( handCard(choice1, state)  );
+	  //trash card
+	  discardCard(choice1, currentPlayer, state, 0); //bug changed from 1	
+	}
+			
+      //discard card
+      discardCard(handPos, currentPlayer, state, 0);
+      return 0;
+   }
 
 int discardCard(int handPos, int currentPlayer, struct gameState *state, int trashFlag)
 {
