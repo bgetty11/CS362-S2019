@@ -6,6 +6,22 @@ rngs.o: rngs.h rngs.c
 dominion.o: dominion.h dominion.c rngs.o
 	gcc -c dominion.c -g  $(CFLAGS)
 
+randomtestresults: randomtestcard1.c randomtestcard2.c randomtestcard3.c dominion.h dominion.c rngs.o
+	echo "Results for running randomcardtest1.c: " > randomtestresults.out
+	gcc -o randomtestcard1 dominion.c randomtestcard1.c rngs.o $(CFLAGS)
+	./randomtestcard1 >> randomtestresults.out
+	gcov -fb dominion.c >> randomtestresults.out
+
+	echo "Results for running randomcardtest2.c: " >> randomtestresults.out
+	gcc -o randomtestcard2 dominion.c randomtestcard2.c rngs.o $(CFLAGS)
+	./randomtestcard2 >> randomtestresults.out
+	gcov -fb dominion.c >> randomtestresults.out
+
+	echo "Results for running randomcardtest3.c: " >> randomtestresults.out
+	gcc -o randomtestcard3 dominion.c randomtestcard3.c rngs.o $(CFLAGS)
+	./randomtestcard3 >> randomtestresults.out
+	gcov -fb dominion.c >> randomtestresults.out
+
 playdom: dominion.o playdom.c
 	gcc -o playdom playdom.c -g dominion.o rngs.o $(CFLAGS)
 #To run playdom you need to entere: ./playdom <any integer number> like ./playdom 10*/
@@ -28,6 +44,7 @@ runtests: testDrawCard
 	./testDrawCard &> unittestresult.out
 	gcov dominion.c >> unittestresult.out
 	cat dominion.c.gcov >> unittestresult.out
+
 
 
 player: player.c interface.o
